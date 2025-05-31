@@ -1,0 +1,386 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables */
+@layer base {
+  :root {
+    /* Light theme colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius: 0.5rem;
+    
+    /* Sermon editor specific colors */
+    --editor-bg: 0 0% 100%;
+    --editor-text: 222.2 84% 4.9%;
+    --editor-border: 214.3 31.8% 91.4%;
+    --editor-toolbar: 210 40% 98%;
+    --editor-highlight: 47.9 95.8% 53.1%;
+    --editor-selection: 221.2 83.2% 53.3% / 0.2;
+    --editor-block-hover: 210 40% 96.1%;
+    --editor-block-selected: 221.2 83.2% 53.3% / 0.1;
+    --editor-placeholder: 215.4 16.3% 46.9%;
+    --editor-comment: 25 95% 53% / 0.1;
+    --editor-comment-border: 25 95% 53%;
+  }
+
+  .dark {
+    /* Dark theme colors */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 144.9 80.4% 10%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    
+    /* Sermon editor specific colors */
+    --editor-bg: 222.2 84% 4.9%;
+    --editor-text: 210 40% 98%;
+    --editor-border: 217.2 32.6% 17.5%;
+    --editor-toolbar: 222.2 47.4% 11.2%;
+    --editor-highlight: 47.9 95.8% 53.1%;
+    --editor-selection: 217.2 91.2% 59.8% / 0.3;
+    --editor-block-hover: 217.2 32.6% 17.5%;
+    --editor-block-selected: 217.2 91.2% 59.8% / 0.2;
+    --editor-placeholder: 215 20.2% 65.1%;
+    --editor-comment: 25 95% 53% / 0.15;
+    --editor-comment-border: 25 95% 53%;
+  }
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Improved Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    font-feature-settings: "salt" on, "ss01" on;
+  }
+  
+  h1 {
+    @apply text-4xl leading-tight md:text-5xl;
+  }
+  
+  h2 {
+    @apply text-3xl leading-tight;
+  }
+  
+  h3 {
+    @apply text-2xl leading-snug;
+  }
+  
+  h4 {
+    @apply text-xl leading-snug;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+  
+  /* Focus states for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary/50 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
+  }
+  
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)/0.3) hsl(var(--secondary)/0.5);
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Button base styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  .btn-outline {
+    @apply border border-input hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  .btn-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  .btn-destructive {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+  
+  .btn-success {
+    @apply bg-success text-success-foreground hover:bg-success/90;
+  }
+  
+  .btn-link {
+    @apply underline-offset-4 hover:underline text-primary;
+  }
+  
+  .btn-icon {
+    @apply h-10 w-10 p-0;
+  }
+  
+  .btn-sm {
+    @apply h-9 px-3 rounded-md;
+  }
+  
+  .btn-md {
+    @apply h-10 py-2 px-4;
+  }
+  
+  .btn-lg {
+    @apply h-11 px-8 rounded-md;
+  }
+  
+  /* Form element base styles */
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+    ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium
+    placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2
+    focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-select {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+    ring-offset-background focus-visible:outline-none focus-visible:ring-2
+    focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-textarea {
+    @apply flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+    ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none
+    focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-checkbox {
+    @apply h-4 w-4 rounded border border-input bg-background text-primary
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+    focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-radio {
+    @apply h-4 w-4 rounded-full border border-input bg-background text-primary
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+    focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+  }
+}
+
+/* Sermon Editor specific styles */
+@layer utilities {
+  /* Sermon editor container */
+  .sermon-editor {
+    @apply relative bg-[hsl(var(--editor-bg))] text-[hsl(var(--editor-text))] rounded-md border border-[hsl(var(--editor-border))];
+  }
+  
+  /* Editor toolbar */
+  .sermon-editor-toolbar {
+    @apply sticky top-0 z-10 flex items-center gap-1 bg-[hsl(var(--editor-toolbar))] p-2 border-b border-[hsl(var(--editor-border))] rounded-t-md;
+  }
+  
+  /* Content editable area */
+  .sermon-editor-content {
+    @apply p-4 min-h-[300px] focus:outline-none prose dark:prose-invert max-w-none prose-headings:mb-3 prose-headings:mt-6 prose-p:my-2;
+  }
+  
+  /* Block styles */
+  .sermon-block {
+    @apply relative p-2 my-2 rounded-md border border-transparent transition-all duration-200;
+  }
+  
+  .sermon-block:hover {
+    @apply bg-[hsl(var(--editor-block-hover))];
+  }
+  
+  .sermon-block-selected {
+    @apply bg-[hsl(var(--editor-block-selected))] border-[hsl(var(--editor-border))];
+  }
+  
+  /* Block types */
+  .sermon-block-title {
+    @apply text-3xl font-bold;
+  }
+  
+  .sermon-block-point {
+    @apply text-xl font-semibold;
+  }
+  
+  .sermon-block-subpoint {
+    @apply text-lg font-medium;
+  }
+  
+  .sermon-block-scripture {
+    @apply italic bg-[hsl(var(--editor-highlight))/10] p-3 rounded-md border-l-4 border-[hsl(var(--editor-highlight))];
+  }
+  
+  .sermon-block-illustration {
+    @apply border-l-4 border-[hsl(var(--primary))] pl-3;
+  }
+  
+  .sermon-block-quote {
+    @apply border-l-4 border-[hsl(var(--muted-foreground))] pl-3 italic;
+  }
+  
+  .sermon-block-application {
+    @apply bg-[hsl(var(--success))/10] p-3 rounded-md;
+  }
+  
+  .sermon-block-conclusion {
+    @apply bg-[hsl(var(--secondary))] p-3 rounded-md;
+  }
+  
+  .sermon-block-introduction {
+    @apply bg-[hsl(var(--secondary))] p-3 rounded-md;
+  }
+  
+  .sermon-block-note {
+    @apply text-[hsl(var(--muted-foreground))] text-sm italic;
+  }
+  
+  /* Comments */
+  .sermon-comment {
+    @apply bg-[hsl(var(--editor-comment))] border-l-4 border-[hsl(var(--editor-comment-border))] p-2 my-2 rounded-r-md;
+  }
+  
+  /* Placeholder text */
+  .sermon-editor-placeholder {
+    @apply text-[hsl(var(--editor-placeholder))] absolute pointer-events-none;
+  }
+  
+  /* Collaboration cursors */
+  .collaboration-cursor {
+    @apply absolute pointer-events-none;
+  }
+  
+  .collaboration-cursor-label {
+    @apply absolute top-0 left-0 transform -translate-y-full px-2 py-1 rounded text-xs text-white font-medium;
+  }
+  
+  /* Text selection */
+  ::selection {
+    @apply bg-[hsl(var(--editor-selection))];
+  }
+}
+
+/* Animations and transitions */
+@layer utilities {
+  .animate-fade-in {
+    @apply opacity-0 animate-in fade-in duration-300;
+  }
+  
+  .animate-slide-in-bottom {
+    @apply opacity-0 animate-in slide-in-from-bottom-4 duration-300;
+  }
+  
+  .animate-slide-in-top {
+    @apply opacity-0 animate-in slide-in-from-top-4 duration-300;
+  }
+  
+  .animate-slide-in-left {
+    @apply opacity-0 animate-in slide-in-from-left-4 duration-300;
+  }
+  
+  .animate-slide-in-right {
+    @apply opacity-0 animate-in slide-in-from-right-4 duration-300;
+  }
+  
+  .animate-scale {
+    @apply scale-95 animate-in zoom-in-95 duration-300;
+  }
+  
+  .transition-smooth {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .transition-bounce {
+    @apply transition-all duration-300 ease-out;
+  }
+}
