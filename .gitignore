@@ -1,0 +1,132 @@
+# SermonFlow .gitignore
+# A comprehensive .gitignore for a TypeScript monorepo
+
+# === Dependencies ===
+node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# === Build outputs ===
+.next/
+out/
+build/
+dist/
+.swc/
+.turbo/
+storybook-static/
+*.tsbuildinfo
+
+# === Environment files ===
+.env
+.env.*
+!.env.example
+!.env.template
+
+# === Package manager lock files ===
+# Keep pnpm-lock.yaml (our chosen package manager)
+package-lock.json
+yarn.lock
+.npmrc
+
+# === IDE files ===
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# === OS files ===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# === Log files ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Database files ===
+*.sqlite
+*.sqlite3
+*.db
+
+# === Temporary files ===
+tmp/
+temp/
+.cache/
+.eslintcache
+.stylelintcache
+
+# === Coverage reports ===
+coverage/
+.nyc_output/
+*.lcov
+
+# === Turborepo cache ===
+.turbo/
+
+# === Prisma generated files ===
+node_modules/.prisma/
+node_modules/@prisma/client/
+.prisma/client/
+prisma/migrations/
+# Keep schema.prisma
+!prisma/schema.prisma
+
+# === Mobile specific ===
+# Expo
+.expo/
+dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# === Misc ===
+.vercel
+.netlify
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.vscode-test
+.webpack/
+.docusaurus

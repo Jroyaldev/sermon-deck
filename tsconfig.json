@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "SermonFlow Root",
+  "compilerOptions": {
+    /* Base Options */
+    "target": "es2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    
+    /* Module Resolution */
+    "moduleResolution": "node",
+    "module": "esnext",
+    "baseUrl": ".",
+    
+    /* Path Mappings for Internal Packages */
+    "paths": {
+      "@sermonflow/ui/*": ["packages/ui/src/*"],
+      "@sermonflow/api/*": ["packages/api/src/*"],
+      "@sermonflow/ai/*": ["packages/ai/src/*"],
+      "@sermonflow/types": ["packages/types/src/index"],
+      "@sermonflow/types/*": ["packages/types/src/*"],
+      "@sermonflow/db": ["packages/db/src/index"],
+      "@sermonflow/db/*": ["packages/db/src/*"]
+    },
+    
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    
+    /* Advanced Options */
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": false,
+    "inlineSources": false
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.json"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/.next",
+    "**/coverage",
+    "**/storybook-static",
+    "**/.turbo"
+  ]
+}

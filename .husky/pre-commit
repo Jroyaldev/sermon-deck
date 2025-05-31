@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# SermonFlow pre-commit hook
+# This hook runs before each commit to ensure code quality
+
+# Exit on error
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Run lint-staged to check and format only staged files
+# This is fast and only affects files you're committing
+echo "📝 Running lint-staged on changed files..."
+pnpm lint-staged
+
+# 2. Run type checking across the monorepo
+# This ensures type safety across workspace boundaries
+echo "🔎 Running type checking..."
+pnpm type-check
+
+# 3. Run lint checks
+# This catches any linting issues
+echo "🧹 Running linters..."
+pnpm lint
+
+# 4. Quick tests (commented out by default)
+# Uncomment if you want to run tests before each commit
+# Note: This can slow down commits significantly
+# echo "🧪 Running quick tests..."
+# pnpm test --bail --findRelatedTests
+
+echo "✅ Pre-commit checks passed! Proceeding with commit..."

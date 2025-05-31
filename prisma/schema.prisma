@@ -1,0 +1,616 @@
+// This is the Prisma schema file for SermonFlow
+// It defines all database models, relationships, and constraints
+
+// Database provider configuration
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ==============================
+// USER AUTHENTICATION & PROFILES
+// ==============================
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String    // Hashed password
+  firstName         String
+  lastName          String
+  churchName        String?
+  denomination      String?
+  role              UserRole  @default(PASTOR)
+  bio               String?   @db.Text
+  avatarUrl         String?
+  isEmailVerified   Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  sermons               Sermon[]
+  series                Series[]
+  templates             Template[]              @relation("TemplateCreator")
+  comments              Comment[]
+  collaborations        SermonCollaborator[]
+  favoriteTemplates     Template[]              @relation("TemplateFavorites")
+  aiResearchQueries     AIResearchQuery[]
+  notifications         Notification[]
+  activityLogs          ActivityLog[]
+  sermonVersions        SermonVersion[]         @relation("VersionCreator")
+  sermonBlocks          SermonBlock[]
+  sermonBlockVersions   SermonBlockVersion[]
+  fileAttachments       FileAttachment[]
+  sharedTemplates       SharedTemplate[]        @relation("TemplateSharer")
+  sharedTemplatesAccess SharedTemplate[]        @relation("TemplateRecipient")
+  seriesCollaborator    SeriesCollaborator[]
+  tags                  Tag[]
+  categories            Category[]
+
+  @@index([email])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  PASTOR
+  ASSISTANT
+  GUEST
+}
+
+// ==============================
+// SERMON SERIES MANAGEMENT
+// ==============================
+
+model Series {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  startDate   DateTime?
+  endDate     DateTime?
+  coverImageUrl String?
+  status      SeriesStatus @default(DRAFT)
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sermons     Sermon[]
+  collaborators SeriesCollaborator[]
+  tags        SeriesTag[]
+  categories  SeriesCategory[]
+
+  @@index([createdById])
+  @@index([status])
+  @@map("series")
+}
+
+enum SeriesStatus {
+  DRAFT
+  IN_PROGRESS
+  REVIEW
+  FINALIZED
+  COMPLETED
+}
+
+model SeriesCollaborator {
+  id        String   @id @default(cuid())
+  seriesId  String
+  userId    String
+  role      CollaboratorRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([seriesId, userId])
+  @@index([seriesId])
+  @@index([userId])
+  @@map("series_collaborators")
+}
+
+// ==============================
+// SERMON MANAGEMENT
+// ==============================
+
+model Sermon {
+  id          String   @id @default(cuid())
+  title       String
+  scripture   String?
+  description String?  @db.Text
+  notes       String?  @db.Text
+  status      SermonStatus @default(DRAFT)
+  scheduledDate DateTime?
+  duration    Int?     // Estimated duration in minutes
+  isArchived  Boolean  @default(false)
+  seriesId    String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  series      Series?  @relation(fields: [seriesId], references: [id])
+  blocks      SermonBlock[]
+  collaborators SermonCollaborator[]
+  comments    Comment[]
+  versions    SermonVersion[]
+  tags        SermonTag[]
+  categories  SermonCategory[]
+  fileAttachments FileAttachment[]
+  aiResearchCitations AIResearchCitation[]
+  
+  @@index([createdById])
+  @@index([seriesId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("sermons")
+}
+
+enum SermonStatus {
+  DRAFT
+  REVIEW
+  FINALIZED
+  DELIVERED
+  ARCHIVED
+}
+
+// Hierarchical sermon structure
+model SermonBlock {
+  id          String   @id @default(cuid())
+  sermonId    String
+  parentId    String?  // For hierarchical structure
+  type        BlockType
+  content     String   @db.Text
+  order       Int      // Position within parent or sermon
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  sermon      Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  parent      SermonBlock? @relation("BlockHierarchy", fields: [parentId], references: [id])
+  children    SermonBlock[] @relation("BlockHierarchy")
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  versions    SermonBlockVersion[]
+  comments    Comment[]
+  
+  @@index([sermonId])
+  @@index([parentId])
+  @@index([type])
+  @@map("sermon_blocks")
+}
+
+enum BlockType {
+  TITLE
+  POINT
+  SUBPOINT
+  SCRIPTURE
+  ILLUSTRATION
+  QUOTE
+  APPLICATION
+  CONCLUSION
+  INTRODUCTION
+  NOTE
+  CUSTOM
+}
+
+// Version history for sermon blocks
+model SermonBlockVersion {
+  id            String   @id @default(cuid())
+  blockId       String
+  content       String   @db.Text
+  createdById   String
+  createdAt     DateTime @default(now())
+  
+  // Relationships
+  block         SermonBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  
+  @@index([blockId])
+  @@index([createdById])
+  @@map("sermon_block_versions")
+}
+
+// Version history for entire sermons
+model SermonVersion {
+  id          String   @id @default(cuid())
+  sermonId    String
+  versionNumber Int
+  snapshot    Json     // Complete sermon state
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  sermon      Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  
+  @@unique([sermonId, versionNumber])
+  @@index([sermonId])
+  @@map("sermon_versions")
+}
+
+// ==============================
+// COLLABORATION
+// ==============================
+
+model SermonCollaborator {
+  id        String   @id @default(cuid())
+  sermonId  String
+  userId    String
+  role      CollaboratorRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  sermon    Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sermonId, userId])
+  @@index([sermonId])
+  @@index([userId])
+  @@map("sermon_collaborators")
+}
+
+enum CollaboratorRole {
+  EDITOR
+  REVIEWER
+  VIEWER
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  resolved    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Polymorphic relationship - can be on sermon or block
+  sermonId    String?
+  blockId     String?
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sermon      Sermon?  @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  block       SermonBlock? @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  
+  @@index([createdById])
+  @@index([sermonId])
+  @@index([blockId])
+  @@map("comments")
+}
+
+// ==============================
+// TEMPLATES
+// ==============================
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  structure   Json     // Template structure as JSON
+  isPublic    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  createdBy   User     @relation("TemplateCreator", fields: [createdById], references: [id])
+  favoritedBy User[]   @relation("TemplateFavorites")
+  tags        TemplateTag[]
+  categories  TemplateCategory[]
+  sharedWith  SharedTemplate[] @relation("SharedTemplates")
+  
+  @@index([createdById])
+  @@index([isPublic])
+  @@map("templates")
+}
+
+model SharedTemplate {
+  id          String   @id @default(cuid())
+  templateId  String
+  sharedById  String
+  sharedWithId String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  template    Template @relation("SharedTemplates", fields: [templateId], references: [id], onDelete: Cascade)
+  sharedBy    User     @relation("TemplateSharer", fields: [sharedById], references: [id])
+  sharedWith  User     @relation("TemplateRecipient", fields: [sharedWithId], references: [id])
+  
+  @@unique([templateId, sharedWithId])
+  @@index([templateId])
+  @@index([sharedById])
+  @@index([sharedWithId])
+  @@map("shared_templates")
+}
+
+// ==============================
+// AI RESEARCH & CONTENT GENERATION
+// ==============================
+
+model AIResearchQuery {
+  id          String   @id @default(cuid())
+  query       String   @db.Text
+  context     String?  @db.Text
+  results     Json?    // Structured results
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  citations   AIResearchCitation[]
+  
+  @@index([createdById])
+  @@map("ai_research_queries")
+}
+
+model AIResearchCitation {
+  id          String   @id @default(cuid())
+  sermonId    String
+  queryId     String
+  sourceUrl   String?
+  sourceTitle String?
+  content     String   @db.Text
+  contentType CitationType
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  sermon      Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  query       AIResearchQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  
+  @@index([sermonId])
+  @@index([queryId])
+  @@index([contentType])
+  @@map("ai_research_citations")
+}
+
+enum CitationType {
+  SCRIPTURE
+  COMMENTARY
+  SCHOLARLY_ARTICLE
+  ILLUSTRATION
+  QUOTE
+  HISTORICAL_CONTEXT
+  THEOLOGICAL_INTERPRETATION
+  OTHER
+}
+
+// ==============================
+// FILE ATTACHMENTS & MEDIA
+// ==============================
+
+model FileAttachment {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int      // File size in bytes
+  path        String   // Storage path
+  isPublic    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  // Polymorphic relationship - can be attached to sermon
+  sermonId    String?
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sermon      Sermon?  @relation(fields: [sermonId], references: [id], onDelete: SetNull)
+  
+  @@index([createdById])
+  @@index([sermonId])
+  @@map("file_attachments")
+}
+
+// ==============================
+// TAGGING & CATEGORIZATION
+// ==============================
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sermons     SermonTag[]
+  series      SeriesTag[]
+  templates   TemplateTag[]
+  
+  @@index([name])
+  @@map("tags")
+}
+
+model SermonTag {
+  id        String   @id @default(cuid())
+  sermonId  String
+  tagId     String
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  sermon    Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([sermonId, tagId])
+  @@index([sermonId])
+  @@index([tagId])
+  @@map("sermon_tags")
+}
+
+model SeriesTag {
+  id        String   @id @default(cuid())
+  seriesId  String
+  tagId     String
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([seriesId, tagId])
+  @@index([seriesId])
+  @@index([tagId])
+  @@map("series_tags")
+}
+
+model TemplateTag {
+  id          String   @id @default(cuid())
+  templateId  String
+  tagId       String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([templateId, tagId])
+  @@index([templateId])
+  @@index([tagId])
+  @@map("template_tags")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  sermons     SermonCategory[]
+  series      SeriesCategory[]
+  templates   TemplateCategory[]
+  
+  @@index([name])
+  @@map("categories")
+}
+
+model SermonCategory {
+  id          String   @id @default(cuid())
+  sermonId    String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  sermon      Sermon   @relation(fields: [sermonId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([sermonId, categoryId])
+  @@index([sermonId])
+  @@index([categoryId])
+  @@map("sermon_categories")
+}
+
+model SeriesCategory {
+  id          String   @id @default(cuid())
+  seriesId    String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([seriesId, categoryId])
+  @@index([seriesId])
+  @@index([categoryId])
+  @@map("series_categories")
+}
+
+model TemplateCategory {
+  id          String   @id @default(cuid())
+  templateId  String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@unique([templateId, categoryId])
+  @@index([templateId])
+  @@index([categoryId])
+  @@map("template_categories")
+}
+
+// ==============================
+// ANALYTICS & USAGE TRACKING
+// ==============================
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  entityType  String?  // e.g., "sermon", "series", "template"
+  entityId    String?
+  metadata    Json?    // Additional context about the activity
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        NotificationType
+  message     String
+  isRead      Boolean  @default(false)
+  entityType  String?  // e.g., "sermon", "comment"
+  entityId    String?
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  COMMENT
+  COLLABORATION_INVITE
+  SERMON_SHARED
+  TEMPLATE_SHARED
+  SYSTEM
+  REMINDER
+}
+
+// Vector storage for semantic search
+model EmbeddingVector {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  embedding   Unsupported("vector(1536)")
+  entityType  String   // e.g., "sermon", "block", "research"
+  entityId    String
+  createdAt   DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@map("embedding_vectors")
+}
